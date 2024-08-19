@@ -26,5 +26,21 @@ aptos move compile --named-addresses aptopus=profilename
 ```bash
 aptos move publish --included-artifacts none --named-addresses aptopus=profilename --profile=profilename
 ```
+# Functions
+1. create_vote_session:
+***Description***: This function will create a vote session including
+id, 
+description, 
+owner, 
+votes, 
+is_active, 
+submited_votes
+***Args***: name: String
+     
+2. vote
+***Description***: this function is voting on a vote session by vote session id, each wallet address just vote once
+***Arguments***: vote_session_id: u64
+5. close_vote_session
+   ***Description***: This function is close a vote session, switch is_active to false, just owner of voting session can do this action
+   ***Arguments***: vote_session_id: u64
 # 📑 Lisence
-This project is owned by Weminal lab
