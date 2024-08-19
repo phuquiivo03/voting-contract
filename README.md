@@ -3,7 +3,9 @@
 
 # 🚀 Objective
 
-# Function
+# Sample package id:
+Package: 3364559e000a43e121514b2d19ab16952290fa58356cea5bb5db4c163885df71
+Network: Testnet
 
 # Get Started
 1. Clone this repo:
