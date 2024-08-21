@@ -146,7 +146,7 @@ module aptopus::user {
         while (vote_session_index < vector::length(&admin.vote_sessions)) {
             let vote_session = vector::borrow_mut<VoteSession>(&mut admin.vote_sessions, vote_session_index);
             if(vote_session.id == vote_session_id) {
-                assert!(signer::address_of(s) != vote_session.owner, ERROR_NOT_VOTE_SESSSION_OWNER);
+                assert!(signer::address_of(s) == vote_session.owner, ERROR_NOT_VOTE_SESSSION_OWNER);
                 vote_session.is_active = false;
                 break;
             };
