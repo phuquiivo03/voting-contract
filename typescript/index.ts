@@ -28,18 +28,6 @@ async function callGraphqlApi(query: string, variables: any) {
   }
 }
 
- async function init_account() {
-    console.log("init account...")
-    const signerAccount: Account = Account.generate();
-    // Fund the account on chain. Funding an account creates it on-chain.
-    await aptos.fundAccount({
-    accountAddress: signerAccount.accountAddress,
-    amount: 100000000,
-    });
-    console.log("done init")
-    return signerAccount
- }
-
 
 async function create_vote_session(
   signAndExcute: (transaction: InputTransactionData) => Promise<any>, 
@@ -66,8 +54,35 @@ async function create_vote_session(
       }
 }
 
+
+async function close_vote_session(
+  signAndExcute: (transaction: InputTransactionData) => Promise<any>, 
+  voteSessionId: number,
+  onSuccess: () => void,
+  onFalure: () => void,
+
+) {
+    //build transaction ================================================================= đá
+    const transaction:InputTransactionData = {
+      data: {
+        function:`${PACKAGE}::user::close_vote_session`,
+        functionArguments:[voteSessionId]
+      }
+    }
+      try {
+        const response = await signAndExcute(transaction);
+    // wait for transaction
+        await aptos.waitForTransaction({transactionHash:response.hash});
+        onSuccess()
+      } catch(e) {
+        onFalure()
+      }
+}
+
+
 async function vote(
   signAndExcute: (transaction: InputTransactionData) => Promise<any>, 
+  id: number,
   onSuccess: () => void,
   onFalure: () => void
 ) {
@@ -75,7 +90,7 @@ async function vote(
   let transaction: InputTransactionData = {
     data: {
       function: `${PACKAGE}::user::vote`,
-      functionArguments: [],
+      functionArguments: [id],
     },
   };
   
@@ -88,34 +103,49 @@ async function vote(
   } catch(e) {
     onFalure()
   }
-  
+}
 
+async function get_all_vote_sessions(
+onSuccess: (result: Array<any>)=> void,
+onFalure: ()=> void) {
+
+const payload: InputViewFunctionData = {
+  function: `${PACKAGE}::user::get_all_vote_session`,
+  functionArguments: [],
+};
+
+const chainId = (await aptos.view({ payload })); //get the result from the chain
+let json_result = JSON.parse(JSON.stringify(chainId)) //parse the result to json
+if(json_result) { //check weather result is defined or not
+  onSuccess(json_result)
+} else {
+  onFalure()
+}
 }
 
 async function get_vote_session_info(
-  signer: Account, 
-  onSuccess: (acount: IAccountResponse)=> void,
+  id: number, 
+  onSuccess: (result: any)=> void,
   onFalure: ()=> void
 
 ) {
   const payload: InputViewFunctionData = {
-    function: `${PACKAGE}::user::get_account_info`,
-    functionArguments: [signer.accountAddress],
+    function: `${PACKAGE}::user::get_VoteSession_info`,
+    functionArguments: [id],
   };
-
-  const chainId = (await aptos.view({ payload }))[0]; //get the result from the chain
-  let json_result = JSON.parse(JSON.stringify(chainId))?.vec[0] //parse the result to json
-  console.log("view info")
-  if(json_result) { //check weather result is defined or not
-    onSuccess({name: json_result?.name,
-      score: json_result?.score,
-      user_address: json_result?.user_address})
-  } else {
+  try {
+    
+    const chainId = (await aptos.view({ payload }))[0]; //get the result from the chain
+    let json_result = JSON.parse(JSON.stringify(chainId))?.vec[0] //parse the result to json
+    onSuccess(json_result)
+  }catch {
+    
     onFalure()
   }
+  
 }
  
-export {create_vote_session, get_user_info, init_account, vote, submit_request, type IAccountResponse};
+export {create_vote_session,get_all_vote_sessions, close_vote_session, get_vote_session_info, vote, type IAccountResponse};
 
 
 // interacted with the contract
